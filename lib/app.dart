@@ -9,7 +9,7 @@ class MoviesApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'Movie App',
-      theme: AppThemes(isDarkMode: true).theme,
+      theme: AppThemes().theme,
       routerConfig: AppRouter.router,
     );
   }

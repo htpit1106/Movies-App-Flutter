@@ -15,4 +15,7 @@ class AppColors{
   static const Color navbarColor = Color(0xFF242A32);
   // divider
   static const Color dividerColor = Color(0xFF696974);
+
+  // backgound
+  static const Color bgGray = Color(0xFF252836);
 }

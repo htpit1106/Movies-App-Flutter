@@ -25,23 +25,5 @@ class AppTextStyle {
     color: AppColors.textWhite,
   );
 
-  // dartmode
 
-  static const TextStyle titleSmallDark = TextStyle(
-    fontSize: 16,
-    fontWeight: FontWeight.w600,
-    color: Colors.black,
-  );
-
-
-  static const TextStyle titleMediumDark = TextStyle(
-    fontSize: 18,
-    fontWeight: FontWeight.w800,
-    color: Colors.black,
-  );
-
-  static const TextStyle bodySmallDark = TextStyle(
-    fontSize: 12,
-    color: Colors.black,
-  );
 }
