@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:movies_app/configs/app_config.dart';
 import 'package:movies_app/model/entities/movie_entity.dart';
 import 'package:movies_app/ui/widgets/movie_card.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../network/api_util.dart';
 import '../../../repository/movie_repository.dart';
 
@@ -23,8 +24,6 @@ class _HomePageState extends State<HomePage> {
   bool isLoadMore = false;
   bool hasMore = true;
 
-  // reload
-  bool isReloading = false;
 
   @override
   void initState() {
@@ -53,14 +52,28 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadMovies(int pageNumber) async {
     if (isLoading) return;
-    isLoading = true;
+    setState(() {
+      isLoading = true;
+    });
 
     final response = await repository.getMovies(page: pageNumber);
     final loadMovies = response.results;
+    //
+    final prefs = await SharedPreferences.getInstance();
+    final List<String> moviesIdBookmark = prefs.getStringList('id') ?? [];
+    loadMovies.sort((a, b) {
+      final aWatched = moviesIdBookmark.contains(a.id.toString());
+      final bWatched = moviesIdBookmark.contains(b.id.toString());
+      if (aWatched && !bWatched) return -1;
+      if (!aWatched && bWatched) return 1;
+      return 0;
+    });
 
     movies = loadMovies;
-    isLoading = false;
-    setState(() {});
+
+    setState(() {
+      isLoading = false;
+    });
   }
 
   // load more
@@ -72,26 +85,27 @@ class _HomePageState extends State<HomePage> {
     });
 
     final response = await repository.getMovies(page: currentPage + 1);
-    hasMore = currentPage < response.totalPages ;
+    hasMore = currentPage < response.totalPages;
     movies.addAll(response.results);
     currentPage++;
     isLoadMore = false;
-    setState(() {
-    });
+    setState(() {});
   }
 
   // reloading
   Future<void> reload() async {
-    if (isReloading) return;
-    setState(() {
-      isReloading = true;
-    });
+
     movies.clear();
     currentPage = 1;
     hasMore = true;
-    final response = await repository.getMovies(page: 1);
-    movies = response.results;
-    isReloading = false;
+    _loadMovies(1);
+
+  }
+
+  @override
+  void didChangeDependencies() {
+    // TODO: implement didChangeDependencies
+    super.didChangeDependencies();
   }
 
   @override
@@ -100,10 +114,9 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(title: Text("Movies")),
       body: ListView.builder(
         controller: controller,
-        itemCount: movies.length + (isLoadMore ? 1 : 0) + (isReloading? 1: 0),
+        itemCount: movies.length + (isLoadMore ? 1 : 0) + (isLoading ? 1 : 0),
         itemBuilder: (context, index) {
-
-          if (index == movies.length || isReloading ) {
+          if (index == movies.length || isLoading) {
             return Center(child: CircularProgressIndicator());
           }
           final movie = movies[index];
