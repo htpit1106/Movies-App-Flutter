@@ -1,7 +1,13 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:movies_app/common/app_colors.dart';
 import 'package:movies_app/common/app_icons.dart';
 import 'package:movies_app/common/app_text_style.dart';
+import 'package:movies_app/configs/app_config.dart';
+import 'package:movies_app/model/entities/movie_entity.dart';
+import 'package:movies_app/network/api_movies.dart';
 import 'package:movies_app/ui/widgets/icon_label.dart';
 
 class MoviesDetailPage extends StatefulWidget {
@@ -12,15 +18,47 @@ class MoviesDetailPage extends StatefulWidget {
 }
 
 class _MoviesDetailPageState extends State<MoviesDetailPage> {
+  int? movieId;
+  bool isLoaded = false;
+  late MovieEntity movie;
+
+  @override
+  @override
+  Future<void> didChangeDependencies() async {
+    super.didChangeDependencies();
+    _loadMovieData();
+  }
+
+  Future<void> _loadMovieData() async {
+    final extraData = GoRouterState.of(context).extra;
+
+    if (extraData != null && extraData is Map<String, dynamic>) {
+      movieId = extraData['id'] as int?;
+    }
+
+    if (movieId != null) {
+      movie = await fetchMovieDetail(movieId!);
+    }
+
+    isLoaded = true;
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (!isLoaded) {
+      return Scaffold(
+        appBar: AppBar(title: Text("Detail")),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text("Detail"),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
-            child: Icon(Icons.bookmark_rounded, size: 28),
+            child: InkWell(child: Icon(Icons.bookmark_rounded, size: 28)),
           ),
         ],
       ),
@@ -34,8 +72,8 @@ class _MoviesDetailPageState extends State<MoviesDetailPage> {
                   bottomLeft: Radius.circular(16),
                   bottomRight: Radius.circular(16),
                 ),
-                child: Image.asset(
-                  "assets/images/img_1.png",
+                child: Image.network(
+                  "https://image.tmdb.org/t/p/w500/${movie.backdropPath}",
                   width: double.infinity, // full width của SizedBox/Stack
                   height: 210,
                   fit: BoxFit.cover,
@@ -52,10 +90,19 @@ class _MoviesDetailPageState extends State<MoviesDetailPage> {
                       borderRadius: BorderRadius.circular(8),
                       color: AppColors.bgGray,
                     ),
-                    child: IconLabel(
-                      image: AppIcons.icStar,
-                      color: AppColors.textOrange,
-                      label: "9.5",
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      spacing: 4,
+                      children: [
+                        Image.asset(AppIcons.icStar, height: 16, width: 16),
+                        Text(
+                          AppConfigs.formatRating(movie.voteAverage ?? 0),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textOrange,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -66,8 +113,8 @@ class _MoviesDetailPageState extends State<MoviesDetailPage> {
                   padding: const EdgeInsets.only(top: 150, left: 24),
                   child: ClipRRect(
                     borderRadius: BorderRadius.all(Radius.circular(16)),
-                    child: Image.asset(
-                      "assets/images/img_1.png",
+                    child: Image.network(
+                      "https://image.tmdb.org/t/p/w500/${movie.posterPath}",
                       width: 100,
                       height: 120,
                       fit: BoxFit.cover,
@@ -83,7 +130,7 @@ class _MoviesDetailPageState extends State<MoviesDetailPage> {
                     height: 48,
                     width: 220,
                     child: Text(
-                      "Spiderman No Way Home",
+                      movie.originalTitle ?? "no title",
                       style: AppTextStyle.titleMedium,
                     ),
                   ),
@@ -98,7 +145,7 @@ class _MoviesDetailPageState extends State<MoviesDetailPage> {
               IconLabel(
                 image: AppIcons.icCalendarBlank,
                 color: AppColors.textGray,
-                label: "2021",
+                label: AppConfigs.getYear(movie.releaseDate ?? "2025"),
               ),
               SizedBox(
                 height: 20,
@@ -107,7 +154,7 @@ class _MoviesDetailPageState extends State<MoviesDetailPage> {
               IconLabel(
                 image: AppIcons.icClock,
                 color: AppColors.textGray,
-                label: "2021",
+                label: " ${movie.runtime} minutes",
               ),
               SizedBox(
                 height: 20,
@@ -116,14 +163,14 @@ class _MoviesDetailPageState extends State<MoviesDetailPage> {
               IconLabel(
                 image: AppIcons.icTicket,
                 color: AppColors.textGray,
-                label: "2021",
+                label: "Action",
               ),
             ],
           ),
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Text(
-              "From DC Comics comes the Suicide Squad, an antihero team of incarcerated supervillains who act as deniable assets for the United States government, undertaking high-risk black ops missions in exchange for commuted prison sentences.",
+              movie.overview ?? "",
               style: AppTextStyle.bodysmall,
               textAlign: TextAlign.start,
             ),
