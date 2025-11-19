@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
@@ -13,7 +12,6 @@ class AppTextStyle {
     color: AppColors.textWhite,
   );
 
-
   static const TextStyle titleMedium = TextStyle(
     fontSize: 18,
     fontWeight: FontWeight.w800,
@@ -24,6 +22,4 @@ class AppTextStyle {
     fontSize: 12,
     color: AppColors.textWhite,
   );
-
-
 }

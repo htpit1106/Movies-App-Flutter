@@ -6,75 +6,84 @@ import 'package:movies_app/common/app_text_style.dart';
 import 'package:movies_app/router/router_config.dart';
 import 'package:movies_app/ui/widgets/icon_label.dart';
 
-class Moviecard extends StatelessWidget {
-  const Moviecard({
+class MovieCard extends StatelessWidget {
+  const MovieCard({
     super.key,
-    required this.imagePath,
-    required this.title,
-    required this.rating,
-    required this.year,
-    required this.duration,
+    required this.id,
+    this.imagePath,
+    this.originalTitle,
+    this.voteAverage,
+    this.releaseDate,
+    this.runtime,
   });
 
-  final String imagePath;
-  final String title;
-  final String rating;
-  final String year;
-  final String duration;
+  final int id;
+  final String? imagePath;
+  final String? originalTitle;
+  final String? voteAverage;
+  final String? releaseDate;
+  final String? runtime;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: (){
-        context.pushNamed( AppRouter.moviesDetail);
+    return InkWell(
+      onTap: () {
+        context.pushNamed(AppRouter.moviesDetail, extra: {'id': id});
       },
-      child: Card(
-        margin: EdgeInsets.only(left: 16, top: 16),
-        color: AppColors.background,
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
         child: Row(
           spacing: 13,
           children: [
             ClipRRect(
               borderRadius: BorderRadius.all(Radius.circular(16)),
-              child: Image.asset(
-                imagePath,
+              child: Image.network(
+                imagePath ?? "assets/images/img.png",
                 width: 100,
                 height: 120,
                 fit: BoxFit.cover,
               ),
             ),
-            Column(
-              spacing: 14,
-              children: [
-                Text(title, style: AppTextStyle.titleSmall),
-                Column(
-                  spacing: 4,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 14,
+                children: [
+                  Text(
+                    originalTitle ?? "No title",
+                    style: AppTextStyle.titleSmall,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                  Column(
+                    spacing: 4,
 
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    IconLabel(
-                      color: AppColors.textOrange,
-                      image: AppIcons.icStar,
-                      label: "8.5",
-                    ),
-                    IconLabel(
-                      color: AppColors.textWhite,
-                      image: AppIcons.icTicket,
-                      label: "Action",
-                    ),
-                    IconLabel(
-                      color: AppColors.textWhite,
-                      image: AppIcons.icCalendarBlank,
-                      label: "2021",
-                    ),
-                    IconLabel(
-                      color: AppColors.textWhite,
-                      image: AppIcons.icClock,
-                      label: "139 minutes",
-                    ),
-                  ],
-                ),
-              ],
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      IconLabel(
+                        color: AppColors.textOrange,
+                        image: AppIcons.icStar,
+                        label: voteAverage ?? "8.5",
+                      ),
+                      IconLabel(
+                        color: AppColors.textWhite,
+                        image: AppIcons.icTicket,
+                        label: "Action",
+                      ),
+                      IconLabel(
+                        color: AppColors.textWhite,
+                        image: AppIcons.icCalendarBlank,
+                        label: releaseDate ?? "2021",
+                      ),
+                      IconLabel(
+                        color: AppColors.textWhite,
+                        image: AppIcons.icClock,
+                        label: "139 minutes",
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),
