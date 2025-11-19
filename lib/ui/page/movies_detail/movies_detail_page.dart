@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:movies_app/common/app_colors.dart';
@@ -7,8 +5,11 @@ import 'package:movies_app/common/app_icons.dart';
 import 'package:movies_app/common/app_text_style.dart';
 import 'package:movies_app/configs/app_config.dart';
 import 'package:movies_app/model/entities/movie_entity.dart';
-import 'package:movies_app/network/api_movies.dart';
+import 'package:movies_app/network/api_util.dart';
 import 'package:movies_app/ui/widgets/icon_label.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../repository/movie_repository.dart';
 
 class MoviesDetailPage extends StatefulWidget {
   const MoviesDetailPage({super.key});
@@ -18,30 +19,39 @@ class MoviesDetailPage extends StatefulWidget {
 }
 
 class _MoviesDetailPageState extends State<MoviesDetailPage> {
-  int? movieId;
+  late int movieId;
   bool isLoaded = false;
   late MovieEntity movie;
-
+  late final MovieRepository repository;
+  bool isBookmarked = false;
+  late final SharedPreferences prefs;
+  late List<String> listMoviesBookmarked;
   @override
-  @override
-  Future<void> didChangeDependencies() async {
-    super.didChangeDependencies();
-    _loadMovieData();
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadMovieData();
+    });
   }
 
   Future<void> _loadMovieData() async {
     final extraData = GoRouterState.of(context).extra;
-
     if (extraData != null && extraData is Map<String, dynamic>) {
-      movieId = extraData['id'] as int?;
+      movieId = extraData['id'];
     }
 
-    if (movieId != null) {
-      movie = await fetchMovieDetail(movieId!);
-    }
+    // shared_preferennces
+    prefs = await SharedPreferences.getInstance();
+    listMoviesBookmarked = prefs.getStringList('id') ?? [];
+    isBookmarked = listMoviesBookmarked.contains(movieId.toString());
 
-    isLoaded = true;
-    setState(() {});
+    repository = MovieRepositoryImpl(apiClient: ApiUtil.apiClient);
+    movie = await repository.getDetailMovie(id: movieId);
+
+    setState(() {
+      isLoaded = true;
+    });
   }
 
   @override
@@ -58,7 +68,23 @@ class _MoviesDetailPageState extends State<MoviesDetailPage> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
-            child: InkWell(child: Icon(Icons.bookmark_rounded, size: 28)),
+            child: InkWell(
+              onTap: () async {
+                if (isBookmarked) {
+                  listMoviesBookmarked.remove(movieId.toString());
+                  await prefs.setStringList('id', listMoviesBookmarked);
+                } else {
+                  listMoviesBookmarked.add(movieId.toString());
+                  await prefs.setStringList('id',  listMoviesBookmarked);
+                }
+                setState(() {
+                  isBookmarked = !isBookmarked;
+                });
+              },
+              child: isBookmarked
+                  ? Icon(Icons.bookmark_rounded, size: 28)
+                  : Icon(Icons.bookmark_border, size: 28),
+            ),
           ),
         ],
       ),
